@@ -8,13 +8,9 @@ public class EventManager : MonoBehaviour {
 
 	public SkinProcessor skinProcessor;
 	public HeartProcessor heartProcessor;
-
+	public static EventManager instance; 
 	public Text statusText;
-	public Text scoreText;
-	public float scrollSpeed = -1.5f;
-	public bool gameOver = false; 
 
-	private int score = 0; 
 	private Dictionary <string, UnityEvent> eventDictionary;
 	private static EventManager eventManager;
 
@@ -44,6 +40,18 @@ public class EventManager : MonoBehaviour {
 
 	public float GetGameSessionDuration(){
 		return gamesessionDuration;
+	}
+
+	void Awake()
+	{
+		//If we don't currently have a game control...
+		if (instance == null)
+			//...set this one to be it...
+			instance = this;
+		//...otherwise...
+		else if(instance != this)
+			//...destroy this one because it is a duplicate.
+			Destroy (gameObject);
 	}
 
 	void Start (){
@@ -91,75 +99,5 @@ public class EventManager : MonoBehaviour {
 
 	void SetAnticipationDuration (){
 		anticipationDuration = Random.Range (1.0f, 5.0f); 
-	}
-
-
-	public static EventManager instance
-	{
-		get
-		{
-			if (!eventManager)
-			{
-				eventManager = FindObjectOfType (typeof (EventManager)) as EventManager;
-
-				if (!eventManager)
-				{
-					Debug.LogError ("There needs to be one active EventManger script on a GameObject in your scene.");
-				}
-				else
-				{
-					eventManager.Init (); 
-				}
-			}
-
-			return eventManager;
-		}
-	}
-
-	void Init ()
-	{
-		if (eventDictionary == null)
-		{
-			eventDictionary = new Dictionary<string, UnityEvent>();
-		}
-	}
-
-	public static void StartListening (string eventName, UnityAction listener)
-	{
-		UnityEvent thisEvent = null;
-		if (instance.eventDictionary.TryGetValue (eventName, out thisEvent))
-		{
-			thisEvent.AddListener (listener);
-		} 
-		else
-		{
-			thisEvent = new UnityEvent ();
-			thisEvent.AddListener (listener);
-			instance.eventDictionary.Add (eventName, thisEvent);
-		}
-	}
-
-	public static void StopListening (string eventName, UnityAction listener)
-	{
-		if (eventManager == null) return;
-		UnityEvent thisEvent = null;
-		if (instance.eventDictionary.TryGetValue (eventName, out thisEvent))
-		{
-			thisEvent.RemoveListener (listener);
-		}
-	}
-
-	public static void TriggerEvent (string eventName)
-	{
-		UnityEvent thisEvent = null;
-		if (instance.eventDictionary.TryGetValue (eventName, out thisEvent))
-		{
-			thisEvent.Invoke ();
-		}
-	}
-
-	public void ScoreChange (int points){
-		score += points;
-		scoreText.text = "score: " + score;
 	}
 }

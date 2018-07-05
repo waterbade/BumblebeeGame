@@ -13,15 +13,9 @@ public class ScrollingObject : MonoBehaviour {
 		rb2d = GetComponent<Rigidbody2D>();
 
 		//Start the object moving.
-		rb2d.velocity = new Vector2 (EventManager.instance.scrollSpeed, 0);
+		rb2d.velocity = new Vector2 (GameController.instance.scrollSpeed, 0);
 	}
 
 	void Update()
-	{
-		// If the game is over, stop scrolling.
-		if(EventManager.instance.gameOver == true)
-		{
-			rb2d.velocity = Vector2.zero;
-		}
-	}
+	{}
 }

@@ -19,7 +19,7 @@ public class FlowerZone : MonoBehaviour {
 	private float yMin;
 	private float yMax;
 
-	public FlowerZone(int m_poolSize, Vector2 zoneRange, Vector2 prefabRange, float m_spawnRate){
+	public void Init(int m_poolSize, Vector2 zoneRange, Vector2 prefabRange, float m_spawnRate){
 		poolSize = m_poolSize;
 		yMin = zoneRange.x;
 		yMax = zoneRange.y;
@@ -30,7 +30,6 @@ public class FlowerZone : MonoBehaviour {
 		spawnRate = m_spawnRate;
 		currentFlower = 0;
 		timeSinceLastSpawned = 0f;
-
 	}
 
 	// Use this for initialization
@@ -58,4 +57,8 @@ public class FlowerZone : MonoBehaviour {
 			if (currentFlower >= poolSize)
 				currentFlower = 0;
 			}
+
+	public Vector2 GetZoneRange(){
+		return (new Vector2 (yMin, yMax));
+	} 
 }
