@@ -3,6 +3,15 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 public class MuscleProcessor : SignalProcessor {
+	public static MuscleProcessor instance;
+	private static MuscleProcessor muscleProcessor; 
+
+	void Awake(){
+		if (instance == null) 
+			instance = this;
+		else if (instance != this)
+			Destroy (gameObject);
+	}
 
 	public double noMuscleMovement = 0.8;
 	public double lowMuscleMovement;

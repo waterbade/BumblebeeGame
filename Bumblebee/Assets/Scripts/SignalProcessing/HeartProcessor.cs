@@ -4,6 +4,9 @@ using UnityEngine;
 using UnityEngine.UI;
 
 public class HeartProcessor : SignalProcessor {
+	//Singleton variables
+	public static HeartProcessor instance; 
+	private static HeartProcessor heartProcessor;
 
 	public double heartbeatThreshold = 6.0;
 	//Calculating the Heart Rate Varability HRV
@@ -12,6 +15,15 @@ public class HeartProcessor : SignalProcessor {
 	private float RMSSD = 0.0f; //  RMSSD. This is the Root Mean Square of Successive Differences between each heartbeat
 	private List <float> SuccessiveIntervalList = new List<float>(); 
 	public Text HRVtext;
+
+	void Awake()
+	{
+		//SingletonPattern
+		if (instance == null)
+			instance = this;
+		else if(instance != this)
+			Destroy (gameObject);
+	}
 
 	// Use this for initialization
 	void Start () {

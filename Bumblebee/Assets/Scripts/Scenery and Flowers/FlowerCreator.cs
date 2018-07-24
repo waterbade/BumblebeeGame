@@ -9,15 +9,22 @@ public class FlowerCreator : MonoBehaviour {
 
 	//!!!!! THS NUMBER IS IMPORTANT!!!!!!!!!
 	private int numberOfFlowerZones = 3;
-	public int numberOfNoneFlowerZones = 3;
+	private int numberOfNoneFlowerZones = 3;
 
 	public GameObject floweryStuff; //needed to attach flower scripts to
 
 	private FlowerZone[] flowerZones;
-	private Vector2 objectPoolPosition = new Vector2 (0,0);  
+	public Vector2 objectPoolPosition = new Vector2 (-10,0);  
 	private float cameraSize;
 	private float gameDuration;
 
+	public int flowerNoZone1 = 25;
+	public int flowerNoZone2 = 25;
+	public int flowerNoZone3 = 25;
+
+	public float zone1Offset = 0.1f;
+	public float zone2Offset = 0.1f;
+	public float zone3Offset = 0.0f;
 
 	void Start () {
 		
@@ -38,17 +45,19 @@ public class FlowerCreator : MonoBehaviour {
 	}
 
 	private void SetUpFlowerZones(){
-		//FlowerZone zone1 = new FlowerZone (10, CalculateZoneRange(1), new Vector2(8,9), CalculateSpawnRate(25));
+		//Mohnblumen, in der höchsten Ebene
 		FlowerZone zone1 = floweryStuff.AddComponent<FlowerZone>(); 
-		zone1.Init(10, CalculateZoneRange(1), new Vector2(8,9), CalculateSpawnRate(25));
+		zone1.Init(10, CalculateZoneRange(1), new Vector2(8,9), CalculateSpawnRate(flowerNoZone1), zone1Offset);
 		flowerZones [0] = zone1;
 
+		//orange und lila in der mittleren Ebene
 		FlowerZone zone2 = floweryStuff.AddComponent<FlowerZone> ();
-		zone2.Init(10, CalculateZoneRange(2), new Vector2(4,8), CalculateSpawnRate(50));
+		zone2.Init(10, CalculateZoneRange(2), new Vector2(4,8), CalculateSpawnRate(flowerNoZone2), zone2Offset);
 		flowerZones [1] = zone2;
 
+		//blau und pink in der unteren Ebene
 		FlowerZone zone3 = floweryStuff.AddComponent<FlowerZone> ();
-		zone3.Init(10, CalculateZoneRange(3), new Vector2(0,4), CalculateSpawnRate(100));
+		zone3.Init(10, CalculateZoneRange(3), new Vector2(0,4), CalculateSpawnRate(flowerNoZone3), zone3Offset);
 		flowerZones [2] = zone3;
 
 		//Debug.Log (flowerZones.Length + " flowerZones have been set Up");
@@ -74,6 +83,7 @@ public class FlowerCreator : MonoBehaviour {
 
 	public int ReturnFlowerZone (float yPos){
 		int zone = 0;
+	
 		for (int i = 0; i < flowerZones.Length; i++) {
 			Vector2 range = flowerZones [i].GetZoneRange();
 			if (yPos > range.x && yPos < range.y)

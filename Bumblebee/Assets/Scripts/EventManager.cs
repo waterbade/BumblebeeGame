@@ -3,101 +3,117 @@ using UnityEngine.Events;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.UI;
-
+using UnityEngine.SceneManagement;
+using UnityEngine.Video;
 public class EventManager : MonoBehaviour {
 
-	public SkinProcessor skinProcessor;
-	public HeartProcessor heartProcessor;
-	public static EventManager instance; 
-	public Text statusText;
-
-	private Dictionary <string, UnityEvent> eventDictionary;
+	public static EventManager instance;
 	private static EventManager eventManager;
 
-	private float startTime;
+	private bool toGame;
+	private float anticipationDuration;
+	private float setupStart;
+	public bool setup = false;
+	public bool playVideo = false;
 
-	//times in seconds
-	private float calmingDuration = 2.00f; 
-	private float baselineDuration = 2.00f;//30.00f;
-	private float anticipationDuration = 3.00f; 
-	private float excitementDuration = 10.00f;//60.00f;
-	private float gamesessionDuration = 180.00f;
+	public float biofeedbackDuration = 30f;
+	private float biofeedbackStart;
+	public bool biofeedback = false;
 
-	// time when something starts
-	private float baselineStart;
-	private float baselineEnd;
-	private float excitementStart;
-	private float gameStart;
-	private float gameEnd;
+	private int numberOfTrials = 3;
+	private int currentTrial = 0;
 
-	private bool isBaseline = false;
-	private bool isExcitement = false;
-	private bool isGame = false;
-
-	private bool baselineEventStart = true;
-	private bool excitementEventStart = true;
-	private bool gameEventStart = true;
-
-	public float GetGameSessionDuration(){
-		return gamesessionDuration;
-	}
+	public bool end = false;
+	public float baselineAverage = 0.0f;
+	public float feedbackAverage = 0.0f;
+	public int score = 0;
 
 	void Awake()
 	{
-		//If we don't currently have a game control...
+		//SingletonPattern for EventManager
 		if (instance == null)
-			//...set this one to be it...
 			instance = this;
-		//...otherwise...
 		else if(instance != this)
-			//...destroy this one because it is a duplicate.
 			Destroy (gameObject);
+		DontDestroyOnLoad (this.gameObject);
 	}
 
 	void Start (){
-		startTime = Time.time;
 		SetAnticipationDuration ();
-
-		baselineStart = calmingDuration;
-		baselineEnd = calmingDuration + baselineDuration;
-		excitementStart = calmingDuration + baselineDuration + anticipationDuration;
-		gameStart = calmingDuration + baselineDuration + anticipationDuration + excitementDuration;
-		gameEnd = calmingDuration + baselineDuration + anticipationDuration + excitementDuration + gamesessionDuration;
-		statusText.text = "startUp";
 	}
 
 	void Update() {
-		float now = Time.time;
-		float timePassed = now - startTime;
-
-		isBaseline = ((timePassed > baselineStart) && (timePassed < baselineEnd)) ? true : false;
-		isExcitement = ((timePassed >= excitementStart) && (timePassed < gameStart )) ? true : false;
-		isGame = ((timePassed >= gameStart) && (timePassed < gameEnd)) ? true : false;
-
-		if (isBaseline && baselineEventStart) {
-			baselineEventStart = false;
-			skinProcessor.ToggleBaseline ();
-			statusText.text = "baseline aqusition";
-		} else if (isExcitement && excitementEventStart) {
-			excitementEventStart = false;
-			skinProcessor.ToggleBaseline ();
-			skinProcessor.ToggleExcitement();
-			statusText.text = "excitement incoming";
-			// play the excitement clip
-		} else if (isGame && gameEventStart) {
-			skinProcessor.ToggleExcitement ();
-			skinProcessor.CalculateMinMax ();
-			statusText.text = "this is a game";
-			//set up game or graphs
-		}else if (timePassed >= gameEnd){
-			//show evaluation screen
-			//cleanUp and restart the session
-			//take care to log all important events
+		if (setup) {
+			float now = Time.time;
+			if (now - setupStart >= anticipationDuration) {
+				playVideo = true;
+				Debug.Log ("Play video");
+				setup = false;
+			}
 		}
+
+		if (biofeedback) {
+			float now = Time.time;
+			Debug.ClearDeveloperConsole ();
+			Debug.Log ("Console cleared");
+			if (now - biofeedbackStart >= biofeedbackDuration) {
+				biofeedback = false;
+				currentTrial++;
+				end = true;
+				SwitchToEnd ();
+			}
+		}
+	}
+
+	public void SwitchToSetupForGame(){
+		toGame = true;
+		setup = true;
+		SceneManager.LoadScene ("setup");
+		setupStart = Time.time;
+
+	}
+
+	public void SwitchToSetupForGraphs(){
+		toGame = false;
+		setup = true;
+		SceneManager.LoadScene ("setup");
+		setupStart = Time.time;
 
 	}
 
 	void SetAnticipationDuration (){
-		anticipationDuration = Random.Range (1.0f, 5.0f); 
+		anticipationDuration = Random.Range (15.0f, 20.0f); 
 	}
+
+	public float GetGameSessionDuration(){
+		return biofeedbackDuration;
+	}
+
+	public void StartBiofeedback(){
+		if (toGame) {
+			SwitchToGame();
+		} else {
+			SwitchToGraphs();
+		}
+		biofeedback = true;
+		biofeedbackStart = Time.time;
+	}
+
+	private void SwitchToGame(){
+		SceneManager.LoadScene ("game");
+	}
+
+	private void SwitchToGraphs(){
+		SceneManager.LoadScene ("graphs");
+	}
+
+	public void SwitchToStart(){
+		SceneManager.LoadScene ("start");
+		SkinProcessor.instance.Restart ();
+	}
+
+	private void SwitchToEnd(){
+		SceneManager.LoadScene ("end");
+	}
+
 }

@@ -6,10 +6,8 @@ using UnityEngine;
 using System.Collections;
 
 public class Line : MonoBehaviour {
-    public BitalinoReader reader;
-	public MuscleProcessor muscleProcessor;
-	public HeartProcessor heartProcessor;
-	public SkinProcessor skinProcessor;
+	[SerializeField]
+    protected BitalinoReader reader;
 
 	public int channelOrStep = 0;
 	public bool isProcessedSignal = false;
@@ -21,6 +19,7 @@ public class Line : MonoBehaviour {
 	private double[] bufferToUse;
 
 	void Start () {
+		reader = BitalinoObject.instance.GetComponentInChildren<BitalinoReader> ();
         line = (LineRenderer) this.GetComponent("LineRenderer");
         line.positionCount = reader.BufferSize;
 		bufferToUse = new double[reader.BufferSize];
@@ -40,12 +39,12 @@ public class Line : MonoBehaviour {
 	}
 
 	protected void SetBuffer (string processorType){
-		if (Equals (processorType, heartProcessor.GetProcesserType ())) {
-			bufferToUse = (heartProcessor.GetBiosignalBuffer (channelOrStep));
-		} else if (Equals (processorType, muscleProcessor.GetProcesserType ())) {
-			bufferToUse = muscleProcessor.GetBiosignalBuffer (channelOrStep);
-		} else if (Equals (processorType, skinProcessor.GetProcesserType ())) {
-			bufferToUse = skinProcessor.GetBiosignalBuffer(channelOrStep);
+		if (Equals (processorType, HeartProcessor.instance.GetProcesserType ())) {
+			bufferToUse = (HeartProcessor.instance.GetBiosignalBuffer (channelOrStep));
+		} else if (Equals (processorType, MuscleProcessor.instance.GetProcesserType ())) {
+			bufferToUse = MuscleProcessor.instance.GetBiosignalBuffer (channelOrStep);
+		} else if (Equals (processorType, SkinProcessor.instance.GetProcesserType ())) {
+			bufferToUse = SkinProcessor.instance.GetBiosignalBuffer(channelOrStep);
 		}
 	}
 

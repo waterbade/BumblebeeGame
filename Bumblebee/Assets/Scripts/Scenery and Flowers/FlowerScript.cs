@@ -10,7 +10,7 @@ public class FlowerScript : MonoBehaviour {
 	void Start () {
 		blossomCollider = GetComponent <Collider2D>();
 		blossomExtent = blossomCollider.bounds.extents.y;
-		
+
 	}
 
 	public float GetColliderExtentY(){

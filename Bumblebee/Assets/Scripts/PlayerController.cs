@@ -5,60 +5,79 @@ using UnityEngine.UI;
 
 public class PlayerController : MonoBehaviour {
 	public FlowerCreator flowerCreator;
-
+	private BitalinoReader bitalinoReader;
 	//movement variables
-	public float speed = 0.0f;
 	private float moveRate = 2.0f;
-
-	//bat internal variables
 	private Rigidbody2D rb;
-	private SpriteRenderer beeRenderer;
-	private Animator beeAnimator;
-
-
+	private float upperBound;
+	private float lowerBound;
+	private float halfBee; 
 	void Start () {
-		//set UI components
-		// point counter
-
-		//get Components of the Bat
+		
 		rb = GetComponent<Rigidbody2D> ();
-		beeRenderer = this.GetComponent<SpriteRenderer> ();
-		beeAnimator = this.GetComponent<Animator> ();
+		halfBee = this.gameObject.GetComponent<Renderer> ().bounds.extents.y;
+		upperBound = Camera.main.orthographicSize - halfBee;
+		lowerBound = -Camera.main.orthographicSize + halfBee;
+
+		bitalinoReader = BitalinoObject.instance.GetComponentInChildren<BitalinoReader> ();
+		//beeRenderer = this.GetComponent<SpriteRenderer> ();
+		//beeAnimator = this.GetComponent<Animator> ();
 	}
-	
+
 	// Update is called once per frame
 	void Update () {
 		MoveCharacter ();
 	}
 
 	private void MoveCharacter(){
-		
-		float move = Input.GetAxis ("Vertical");
-		float y = 0.0f;
-		if (move < 0)
-			y = -moveRate;
-		else if (move > 0)
-			y = moveRate;
-		
-		rb.velocity = new Vector2 (speed, y);
-	}
-
-	/*private void OnCollisionEnter2D (Collision2D col){
-		Debug.Log ("collison with " + col.gameObject.tag);
-		if (col.gameObject.tag == "Flower") {
-			EventManager.instance.ScoreChange (10);
-			//increase points
+		if (bitalinoReader.asStart) {
+			BitalinoMovement ();
 		}
-	}*/
+		else{
+			KeyboardMovement ();
+		}
+	}
 
 	private void OnTriggerEnter2D (Collider2D col){
 		if (col.gameObject.tag == "Flower") {
 			float yPos = col.gameObject.transform.position.y;
 			int zone = flowerCreator.ReturnFlowerZone (yPos);
-			int points = (int) Mathf.Pow(2, (zone-1));
+			int points = (int) Mathf.Pow(2, (zone));
 
 			GameController.instance.ScoreChange (points);
-			//increase points
+			col.gameObject.GetComponentInChildren<ParticleSystem> ().Play ();
 		}
+	}
+
+	private void CheckBounds(){
+		float y = rb.transform.position.y;
+		if (y > upperBound)
+			y = upperBound;
+		else if (y < lowerBound)
+			y = lowerBound;
+		rb.transform.position = new Vector2 (0f, y);
+	}
+
+	private void BitalinoMovement(){
+		float y = 0.0f;
+		y = (float) SkinProcessor.instance.GetCurrentValue();
+
+		rb.transform.position = new Vector2 (0f, y);
+		CheckBounds ();
+	}
+
+	private void KeyboardMovement(){
+		
+		float y = 0.0f;
+		float move = Input.GetAxis ("Vertical");
+
+		if (move < 0)
+			y = -moveRate;
+		else if (move > 0)
+			y = moveRate;
+	
+		rb.velocity = new Vector2(0, y);
+		CheckBounds ();
+
 	}
 }

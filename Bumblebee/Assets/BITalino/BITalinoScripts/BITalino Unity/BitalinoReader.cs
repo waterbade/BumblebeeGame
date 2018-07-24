@@ -24,10 +24,6 @@ public class BitalinoReader : MonoBehaviour {
 	private StreamWriter sw;
 	private Stopwatch stopWatch;
 
-	public MuscleProcessor muscleProcessor;
-	public HeartProcessor heartProcessor;
-	public SkinProcessor skinProcessor;
-
 	//channels of the Bitalino
 	private int muscleChannel = 0;
 	private int heartChannel = 1;
@@ -70,14 +66,14 @@ public class BitalinoReader : MonoBehaviour {
 			{
 				frameBuffer[i] = convert(manager.Read(1)[0]);
 				double lastHeartVal = frameBuffer [i].GetAnalogValue (heartChannel);
-				heartProcessor.ProcessSignals(lastHeartVal, i);
+				HeartProcessor.instance.ProcessSignals(lastHeartVal, i);
 				//heartProcessor.ProcessHeartSignals(lastHeartVal, smoothedHeartbeat, squaredHeartbeat, thresholdedHeartbeat, i);
 
 				double lastMuscleVal = frameBuffer [i].GetAnalogValue (muscleChannel);
-				muscleProcessor.ProcessSignals(lastMuscleVal, i);
+				MuscleProcessor.instance.ProcessSignals(lastMuscleVal, i);
 
 				double lastSkinVal = frameBuffer [i].GetAnalogValue (skinChannel);
-				skinProcessor.ProcessSignals (lastSkinVal, i);
+				SkinProcessor.instance.ProcessSignals (lastSkinVal, i);
 			}
 
 			WriteData(frameBuffer[i]);
@@ -100,9 +96,9 @@ public class BitalinoReader : MonoBehaviour {
 			{
 				//push through the buffers
 				frameBuffer[i] = frameBuffer[i + 1];
-				heartProcessor.PushBuffers (i);
-				muscleProcessor.PushBuffers (i);
-				skinProcessor.PushBuffers (i);
+				HeartProcessor.instance.PushBuffers (i);
+				MuscleProcessor.instance.PushBuffers (i);
+				SkinProcessor.instance.PushBuffers (i);
 			}
 			if (rawData)
 			{
@@ -112,16 +108,16 @@ public class BitalinoReader : MonoBehaviour {
 			{
 				frameBuffer[i] = convert(frames[0]);
 				double lastHeartVal = frameBuffer [i].GetAnalogValue (heartChannel);
-				heartProcessor.ProcessSignals(lastHeartVal, i);
+				HeartProcessor.instance.ProcessSignals(lastHeartVal, i);
 				//heartProcessor.ProcessHeartSignals(lastHeartVal, smoothedHeartbeat, squaredHeartbeat, thresholdedHeartbeat, i);
 
 				double lastMuscleVal = frameBuffer [i].GetAnalogValue (muscleChannel);
-				muscleProcessor.ProcessSignals(lastMuscleVal, i);
+				MuscleProcessor.instance.ProcessSignals(lastMuscleVal, i);
 				//muscleProcessor.ProcessSignals (lastMuscleVal);
 				//muscleProcessor.ProcessSignals (lastMuscleVal, squaredMuscle, smoothedMuscle, thresholdedMuscle, i);
 
 				double lastSkinVal = frameBuffer [i].GetAnalogValue (skinChannel);
-				skinProcessor.ProcessSignals (lastSkinVal, i);
+				SkinProcessor.instance.ProcessSignals (lastSkinVal, i);
 			}
 			WriteData (frameBuffer[i]);
 		}

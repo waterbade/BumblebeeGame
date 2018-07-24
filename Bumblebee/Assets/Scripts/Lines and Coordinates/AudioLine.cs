@@ -11,6 +11,7 @@ public class AudioLine : Line {
 	{
 		audioSource = GetComponent <AudioSource>();
 	}
+
 	void Update (){
 		SetBuffer ("HeartProcessor");
 		DrawProcessedLine ();
@@ -18,10 +19,10 @@ public class AudioLine : Line {
 	}
 
 	private void PlayHeartbeat (){
-		double lastVal = heartProcessor.GetBiosignalBuffer (3) [(reader.BufferSize - 1)];
+		double lastVal = HeartProcessor.instance.GetBiosignalBuffer (3) [(reader.BufferSize - 1)];
 		if (lastVal == 1 && play) {
 			//Debug.Log ("play now");
-			heartProcessor.CalculateHRV (Time.time);
+			HeartProcessor.instance.CalculateHRV (Time.time);
 			audioSource.Play ();
 			play = false;
 		} else if (lastVal == 0 && !play)
