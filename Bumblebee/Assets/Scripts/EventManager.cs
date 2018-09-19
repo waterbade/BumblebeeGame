@@ -20,7 +20,6 @@ public class EventManager : MonoBehaviour {
 	private float biofeedbackStart;
 	public bool biofeedback = false;
 
-	private int numberOfTrials = 3;
 	private int currentTrial = 0;
 
 	public bool end = false;
@@ -55,7 +54,7 @@ public class EventManager : MonoBehaviour {
 		if (biofeedback) {
 			float now = Time.time;
 			Debug.ClearDeveloperConsole ();
-			Debug.Log ("Console cleared");
+			//Debug.Log ("Console cleared");
 			if (now - biofeedbackStart >= biofeedbackDuration) {
 				biofeedback = false;
 				currentTrial++;
@@ -110,9 +109,18 @@ public class EventManager : MonoBehaviour {
 	public void SwitchToStart(){
 		SceneManager.LoadScene ("start");
 		SkinProcessor.instance.Restart ();
+
+		setup = false;
+		playVideo = false;
+		biofeedback = false;
+		end = false;
+		baselineAverage = 0.0f;
+		feedbackAverage = 0.0f;
+		score = 0;
 	}
 
 	private void SwitchToEnd(){
+		BitalinoObject.instance.GetComponentInChildren<BitalinoReader> ().OnApplicationQuit ();
 		SceneManager.LoadScene ("end");
 	}
 

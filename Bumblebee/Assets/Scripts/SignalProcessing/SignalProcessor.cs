@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using System.Linq;
 
 public class SignalProcessor : MonoBehaviour {
 
@@ -46,6 +47,7 @@ public class SignalProcessor : MonoBehaviour {
 	}
 
 	protected double Smooth (double val){
+		//Debug.Log ("processorType:" + processorType + "  smoothList: "+ string.Join("", new List<double>(SmoothList).ConvertAll(i => i.ToString()).ToArray()));
 		List<double> smoothList = new List<double>(); 
 		AddToList (val, SmoothList, Listlength);
 		smoothList = SmoothList;

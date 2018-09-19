@@ -37,6 +37,7 @@ public class BitalinoReader : MonoBehaviour {
 		frameBuffer = new BITalinoFrame[BufferSize];
 		StartCoroutine(start());
 	}
+		
 
 	/// <summary>
 	/// Start the connection
@@ -194,10 +195,10 @@ public class BitalinoReader : MonoBehaviour {
 				if (sw == null)
 				{
 					sw = File.AppendText (dataPath);
-					sw.WriteLine (getChannelsRead ());
+					sw.WriteLine (getChannelsRead ()+ ";EDA_raw;EDA_cleaned;EDA_smoothed;EDA_processed;event;avg;scaleMin;scaleMax;");
 					sw.Flush();
 				}
-				sw.WriteLine (CSV_Parser.ToCSV ((stopWatch.Elapsed.TotalSeconds) + " " + frame.ToString(), manager.AnalogChannels.Length));
+				sw.WriteLine (CSV_Parser.ToCSV ((stopWatch.Elapsed.TotalSeconds) + " " + frame.ToString(), manager.AnalogChannels.Length) + SkinProcessor.instance.skinValues);
 				sw.Flush ();
 			}
 		}
@@ -208,7 +209,7 @@ public class BitalinoReader : MonoBehaviour {
 	/// <summary>
 	/// Stop the connection on the stop of the application
 	/// </summary>
-	private void OnApplicationQuit()
+	public void OnApplicationQuit()
 	{
 		if (asStart == true)
 		{
@@ -264,5 +265,14 @@ public class BitalinoReader : MonoBehaviour {
 		return result + ";Digit0;Digit1;Digit2;Digit3";
 	}
 
+	private string skinValuesToString(){
+		string s = "";
+		//s += SkinProcessor.instance..ToString() + ";";
+		s += SkinProcessor.instance.GetBiosignalBuffer (1).ToString() + ";";
+		s += SkinProcessor.instance.GetBiosignalBuffer (2).ToString() + ";";
+		s += SkinProcessor.instance.GetBiosignalBuffer (3).ToString();
+
+		return s;
+	}
 
 }

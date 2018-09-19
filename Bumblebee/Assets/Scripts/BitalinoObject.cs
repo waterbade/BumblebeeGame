@@ -17,7 +17,7 @@ public class BitalinoObject : MonoBehaviour {
 	}
 
 	void Update(){
-		if (Equals (SceneManager.GetActiveScene ().name, "start"))
+		if (Equals (SceneManager.GetActiveScene ().name, "end"))
 			Destroy (gameObject);
 	}
 }

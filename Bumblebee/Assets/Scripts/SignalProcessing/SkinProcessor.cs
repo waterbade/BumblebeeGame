@@ -7,25 +7,22 @@ public class SkinProcessor : SignalProcessor {
 	//Singleton variables
 	public static SkinProcessor instance; 
 	private static SkinProcessor skinProcessor;
-	[SerializeField]
-	private float scaleMin = 1.0f;
-	[SerializeField]
-	private float scaleMax = 1.5f;
 
-	public float cutOffMax = 10f;
-	public float cutOffMin = 0f;
+	public float diff = 0.1f;
+	public double currentSkinValue;
+	public string skinValues = "";
 
-	public bool calculateMinMax;
+	public string _event = "start";
+	private string prevEvent = "";
 
-	private double feedbackAvg = double.NaN; 
+	private List<double> baselineValues = new List<double> ();
+	private double baselineAvg = 0; 
+	private double standardDeviation = 0;
+	private double feedbackAvg = double.NaN;
 	private double noOfFeedbackValues = 0f;
-
-	private double baselineAvg = double.NaN; 
-	private double noOfBaselineValues = 0f;
-
+	private double max;
+	private double min;
 	private double cameraSize;
-
-	private double currentSkinValue;
 
 	void Awake()
 	{
@@ -44,89 +41,51 @@ public class SkinProcessor : SignalProcessor {
 		smoothedBuffer = new double[bufferSize];
 		squaredBuffer = new double[bufferSize];
 		thresholdedBuffer = new double[bufferSize];
-
-		cameraSize = Camera.main.orthographicSize;		
+		cameraSize = Camera.main.orthographicSize;
+		max = -100;
+		min = 100;
 	}
 	
 	public override void ProcessSignals (double value, int i)
 	{
-		
 		valueBuffer [i] = value;		//0
-
-		if (i > 0)
-			smoothedBuffer [i] = CleanupSignal ((float)value, (float)smoothedBuffer [i - 1], i);//1
-		else
-			smoothedBuffer [i] = (double) Mathf.Min(Mathf.Max( (float) value, cutOffMin), cutOffMax);
+		if (i > 0) {
+			smoothedBuffer [i] = CleanupSignal ((float)valueBuffer [i], (float)smoothedBuffer [i - 1]); //1
+		} else {
+			smoothedBuffer [i] = (double)Mathf.Min (Mathf.Max ((float)value, 0f), 10f);
+		}
 		
 		squaredBuffer [i] = Smooth(smoothedBuffer[i]); //2
-		
-		thresholdedBuffer [i] =  ScaleEDA (squaredBuffer[i]);//3
-
-		currentSkinValue = thresholdedBuffer [i];
-		Debug.Log("value = " + value + " \n processed: " + currentSkinValue);
 
 		if (EventManager.instance.setup) {
-			CalculateBaselineAverage (squaredBuffer [i]);
-		}
-		else if (EventManager.instance.biofeedback){
-			CalculateFeedbackAverage (squaredBuffer [i]);
-		}
+			baselineValues.Add (squaredBuffer [i]);
+			_event = "setup";
+		} else if (EventManager.instance.biofeedback) {
+			CalculateFeedbackAverage (squaredBuffer [i]); 
+			_event = "feedback";}
+		
+		currentSkinValue = squaredBuffer [i];
+		thresholdedBuffer [i] = squaredBuffer[i]; //ScaleEDA (squaredBuffer[i]);//3
+		skinValues = ";"+value.ToString () + ";" + smoothedBuffer [i].ToString () + ";" + squaredBuffer [i].ToString () + ";" + thresholdedBuffer [i].ToString ();
+		skinValues = skinValues.Replace (".", ",");
+		SkinValuesString ();
 	}
 		
-	public void CalculateMinMax(float d) {
-		scaleMax = Mathf.Max (d, scaleMax);
-		scaleMin = Mathf.Min (d, scaleMin);
-	}
-
-	private double CleanupSignal(float value, float previousValue, int i){
-		double max = Mathf.Max (value, previousValue);
-		double min = Mathf.Min (value, previousValue);
-
-		if (max - min > 1)
-			return (double)Mathf.Min (Mathf.Max (previousValue, cutOffMin), cutOffMax);
-		else
-			return (double)Mathf.Min (Mathf.Max (value, cutOffMin), cutOffMax);
+	private double CleanupSignal(float value, float previousValue){
+		float difference = Mathf.Abs (value - previousValue);
+		if (difference > diff) {
+			return (double)previousValue;
+		} else {
+			return (double)value;}
 	} 
-
-	public double GetCurrentValue(){
-		return currentSkinValue;
-	}
-
-	private double ScaleEDA (double value){
-		double span = scaleMax - scaleMin;
-		double newValue = ((value - scaleMin) / span) * (cameraSize * 2) - cameraSize;
-		return newValue;
-		
-	}
-
-	/* new = a1*(n/(n+1)) + a2/(n+1)
-		 * 
-		 * a1 = feedbackAverage
-		 * a2 = newValue
-		 * n = number of values until now */
-
-	private void CalculateBaselineAverage(double newValue){
-		double newAvg;
-		if (double.IsNaN (baselineAvg))
-			newAvg = newValue;
-		else
-			newAvg = baselineAvg * (noOfBaselineValues / (noOfBaselineValues + 1f)) + newValue / (noOfBaselineValues + 1f);
-
-		baselineAvg = newAvg;
-		noOfBaselineValues += 1f;
-		float f_baselineAvg = (float) baselineAvg;
-		EventManager.instance.baselineAverage = f_baselineAvg;
-
-		CalculateMinMax ((float) newValue);
-	}
 
 	private void CalculateFeedbackAverage(double newValue){
 		double newAvg;
 		if (double.IsNaN (feedbackAvg)) {
 			newAvg = newValue;
-			RearrangeMinMax ();
-		}
-		else
+			CalculateBaselineAverage();
+			CalculateStandardDeviation();
+		} else
 			newAvg = feedbackAvg * (noOfFeedbackValues / (noOfFeedbackValues + 1f)) + newValue / (noOfFeedbackValues + 1f);
 
 		feedbackAvg = newAvg;
@@ -134,13 +93,80 @@ public class SkinProcessor : SignalProcessor {
 		EventManager.instance.feedbackAverage = (float) feedbackAvg;
 	}
 
-	public void Restart(){
-		scaleMax = 0f;
-		scaleMin = 100f;
+	private void CalculateBaselineAverage (){
+		double sum = 0;
+		foreach (double d in baselineValues) {
+			sum += d;
+			if (d > max)
+				max = d;
+			else if (d < min)
+				min = d;
+		}
+
+		baselineAvg = sum / baselineValues.Count;
+		float f_baselineAvg = (float) baselineAvg;
+		EventManager.instance.baselineAverage = f_baselineAvg;
 	}
 
-	private void RearrangeMinMax (){
-		scaleMax = Mathf.Min ((float)baselineAvg + 1f, scaleMax);
-		scaleMin = Mathf.Max ((float)baselineAvg - 1f, scaleMin);
+	private void CalculateStandardDeviation (){
+		double sum = 0;
+		foreach (double d in baselineValues) {
+			double val = d - baselineAvg;
+			double valSquared = val * val;
+			sum += valSquared;
+			//sum += Mathf.Pow ((val), 2);
+		}
+		float variance = (float) (sum / baselineValues.Count);
+		standardDeviation = Mathf.Sqrt (variance);
+		Debug.Log ("avg: " + baselineAvg + "\n standard dev: " + standardDeviation);
+	}
+
+	private double ScaleEDA (double oldValue){
+		return oldValue;
+	}
+
+	public void Restart(){
+		baselineValues.Clear();
+		baselineAvg = 0; 
+		standardDeviation = 0;
+		feedbackAvg = double.NaN;
+		noOfFeedbackValues = 0f;
+	}
+
+	//print values each time the event (start, setup, feedback) changes
+	private void SkinValuesString(){
+		//check if the event has changed
+		if (!Equals(prevEvent, _event)){
+			skinValues += ";" + _event +";";
+			prevEvent = _event;
+		}
+		else
+			skinValues += "; ;";
+
+		string printedAvg = "";
+		if ( Equals(_event, "feedback")){
+			printedAvg = feedbackAvg.ToString();
+		}
+		else 
+			printedAvg = baselineAvg.ToString();
+		
+		printedAvg = printedAvg.Replace (".", ",");
+		skinValues += printedAvg;			
+	}
+
+	public double GetBaselineAvg(){
+		return baselineAvg;
+	}
+
+	public double GetStandardDev(){
+		return standardDeviation;
+	}
+
+	public double GetMax(){
+		return max;
+	}
+
+	public double GetMin(){
+		return min;
 	}
 }

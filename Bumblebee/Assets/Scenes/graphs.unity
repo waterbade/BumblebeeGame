@@ -128,7 +128,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &18096393
 Transform:
   m_ObjectHideFlags: 0
@@ -558,7 +558,7 @@ Camera:
   m_Enabled: 1
   serializedVersion: 2
   m_ClearFlags: 2
-  m_BackGroundColor: {r: 1, g: 1, b: 1, a: 0}
+  m_BackGroundColor: {r: 0, g: 0, b: 0, a: 0}
   m_NormalizedViewPortRect:
     serializedVersion: 2
     x: 0
@@ -1128,7 +1128,7 @@ GameObject:
   - component: {fileID: 506011597}
   - component: {fileID: 506011596}
   m_Layer: 0
-  m_Name: SkinLineSmoothed
+  m_Name: SkinLineCleaned
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1266,7 +1266,7 @@ GameObject:
   - component: {fileID: 570401681}
   - component: {fileID: 570401680}
   m_Layer: 0
-  m_Name: SkinLineSquared
+  m_Name: SkinLineSmoothed
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1404,7 +1404,7 @@ GameObject:
   - component: {fileID: 591005878}
   - component: {fileID: 591005877}
   m_Layer: 0
-  m_Name: SkinLineCutoff
+  m_Name: SkinLineScaled
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2016,6 +2016,11 @@ Prefab:
       propertyPath: m_RootOrder
       value: 9
       objectReference: {fileID: 0}
+    - target: {fileID: 114280628129572696, guid: e6db9933586952d40a17195bc6420b8e,
+        type: 2}
+      propertyPath: diff
+      value: 0.1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: e6db9933586952d40a17195bc6420b8e, type: 2}
   m_IsPrefabParent: 0
@@ -2247,8 +2252,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 80433f2a6e33fe5438cacdea1bb9bab3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  setup: 0
   playVideo: 0
   biofeedbackDuration: 30
+  biofeedback: 0
+  end: 0
+  baselineAverage: 0
+  feedbackAverage: 0
+  score: 0
 --- !u!4 &1462318535
 Transform:
   m_ObjectHideFlags: 0

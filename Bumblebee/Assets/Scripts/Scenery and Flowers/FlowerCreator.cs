@@ -26,7 +26,7 @@ public class FlowerCreator : MonoBehaviour {
 	public float zone2Offset = 0.1f;
 	public float zone3Offset = 0.0f;
 
-	void Start () {
+	void Awake () {
 		
 		cameraSize = Camera.main.orthographicSize;
 		gameDuration = EventManager.instance.GetGameSessionDuration ();
@@ -90,5 +90,28 @@ public class FlowerCreator : MonoBehaviour {
 				zone = i;
 		}
 		return zone;
+	}
+
+	public Vector2 [] GetFlowerZonePositons (){
+		Vector2[] flowerZonePositons = new Vector2[numberOfFlowerZones];
+		for (int i = 0; i < flowerZones.Length; i++) {
+			Vector2 range = flowerZones [i].GetZoneRange ();
+			flowerZonePositons [i] = range;
+		}
+		return flowerZonePositons;
+	}
+
+	public Vector2 [] GetZonePositons (){	
+		int numberOfZones = numberOfNoneFlowerZones + numberOfFlowerZones;
+		float zoneSize = (cameraSize * 2) / numberOfZones; 
+		Vector2[] flowerZonePositons = new Vector2[numberOfZones];
+
+		for (int i = 0; i < numberOfZones; i++) {
+			float start = cameraSize - (i * zoneSize);
+			float end = start - zoneSize;
+			Vector2 range = new Vector2 (start, end);
+			flowerZonePositons[i] = range;
+		}
+		return flowerZonePositons;
 	}
 }

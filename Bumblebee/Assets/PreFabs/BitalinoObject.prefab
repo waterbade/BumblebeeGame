@@ -161,11 +161,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   reader: {fileID: 114658685551565014}
+  diff: 0.01
+  currentSkinValue: 0
+  _event: start
   scaleMin: 1
   scaleMax: 2
-  cutOffMax: 10
-  cutOffMin: 0
-  calculateMinMax: 0
 --- !u!114 &114328090822877660
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -194,8 +194,8 @@ MonoBehaviour:
   manager: {fileID: 114157625703557976}
   BufferSize: 2000
   rawData: 0
-  dataFile: 0
-  dataPath: C:\Users\Lynn\Documents
+  dataFile: 1
+  dataPath: C:\Users\Lynn\Documents\BitalinoErgebnisse
 --- !u!114 &114884746331980136
 MonoBehaviour:
   m_ObjectHideFlags: 1
