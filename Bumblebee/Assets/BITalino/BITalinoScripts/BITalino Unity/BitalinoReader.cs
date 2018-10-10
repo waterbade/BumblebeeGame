@@ -33,7 +33,8 @@ public class BitalinoReader : MonoBehaviour {
 	{
 		stopWatch = new Stopwatch();
 		//heartProcessor.SetWatch (stopWatch);
-		dataPath += "\\" + DateTime.Now.ToString("MMddHHmmssfff") + "_Data.csv";
+		//dataPath += "\\" + DateTime.Now.ToString("MMddHHmmssfff") + "_Data.csv";
+		dataPath += "\\" + TrialManager.instance.GetFileName() + ".csv";
 		frameBuffer = new BITalinoFrame[BufferSize];
 		StartCoroutine(start());
 	}
@@ -195,7 +196,7 @@ public class BitalinoReader : MonoBehaviour {
 				if (sw == null)
 				{
 					sw = File.AppendText (dataPath);
-					sw.WriteLine (getChannelsRead ()+ ";EDA_raw;EDA_cleaned;EDA_smoothed;EDA_processed;event;avg;scaleMin;scaleMax;");
+					sw.WriteLine (getChannelsRead ()+ ";EDA_raw;EDA_cleaned;event;avg;");
 					sw.Flush();
 				}
 				sw.WriteLine (CSV_Parser.ToCSV ((stopWatch.Elapsed.TotalSeconds) + " " + frame.ToString(), manager.AnalogChannels.Length) + SkinProcessor.instance.skinValues);

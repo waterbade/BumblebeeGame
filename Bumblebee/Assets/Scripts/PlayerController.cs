@@ -34,7 +34,7 @@ public class PlayerController : MonoBehaviour {
 		flowerZonePositions = flowerCreator.GetZonePositons ();
 
 		bitalinoReader = BitalinoObject.instance.GetComponentInChildren<BitalinoReader> ();
-		SetupSkinZones ();
+		//SetupSkinZones ();
 		//beeRenderer = this.GetComponent<SpriteRenderer> ();
 		//beeAnimator = this.GetComponent<Animator> ();
 	}
@@ -71,10 +71,11 @@ public class PlayerController : MonoBehaviour {
 		float y = 0f; 
 
 		Vector2 playerZone = ZoneOfPlayer ();
-		Vector2 valueZone = ZoneOfSkinValue (SkinProcessor.instance.currentSkinValue);
+		Vector2 valueZone = SkinProcessor.instance.GetSkinValueZone ();
+		//Vector2 valueZone = ZoneOfSkinValue (SkinProcessor.instance.currentSkinValue);
 
-		Debug.Log ("PlayerZone = ( " + playerZone.x + " / " + playerZone.y + " )");
-		Debug.Log ("SkinZone = ( " + valueZone.x + " / " + valueZone.y + " )");
+		//Debug.Log ("PlayerZone = ( " + playerZone.x + " / " + playerZone.y + " )");
+		//Debug.Log ("SkinZone = ( " + valueZone.x + " / " + valueZone.y + " )");
 
 		//player is not in the correct Zone
 		if (playerZone.x != valueZone.x) {
@@ -104,6 +105,107 @@ public class PlayerController : MonoBehaviour {
 		CheckBounds (lowerBoundScreen, upperBoundScreen);
 	}
 		
+
+
+	private Vector2 ZoneOfPlayer(){
+		Vector2 zoneOfPlayer = new Vector2(0, 0);
+		float playerPos = this.transform.position.y;
+
+		for (int i = 0; i < flowerZonePositions.Length; i++) {
+			if (isValueInRange (playerPos, flowerZonePositions [i])) {
+				zoneOfPlayer.x = i;
+				break;
+			}
+		}		
+		int currentZone = (int) zoneOfPlayer.x;
+		float flowerZonePer = (flowerZonePositions [currentZone].x - flowerZonePositions [currentZone].y)/divider;
+		zoneOfPlayer.y = Mathf.Floor( (playerPos - flowerZonePositions [currentZone].y) / flowerZonePer);
+		return zoneOfPlayer;
+	}
+
+	private bool isValueInRange (float value, Vector2 range){
+		return (value < range.x && value > range.y);
+	}
+
+	private bool isValueInRange (double value, Vector2double range){
+		return (value < range.x && value > range.y);
+	}
+
+
+
+	//Add points if bee hits a flower
+	private void OnTriggerEnter2D (Collider2D col){
+		if (col.gameObject.tag == "Flower") {
+			float yPos = col.gameObject.transform.position.y;
+			int zone = flowerCreator.ReturnFlowerZone (yPos);
+			int points = (int) Mathf.Pow(2, (zone));
+
+			GameController.instance.ScoreChange (points);
+			col.gameObject.GetComponentInChildren<ParticleSystem> ().Play ();
+		}
+	}
+
+	private void CheckBounds(float lowerBound, float upperBound){
+		float y = rb.transform.position.y;
+		if (y > upperBound) {
+			y = upperBound;
+		} else if (y < lowerBound) {
+			y = lowerBound;
+		}
+		rb.transform.position = new Vector2 (0f, y);
+	}
+
+	//Set the Bee-position to the transformed SkinValue
+	private void BitalinoSetting(){
+		float y = 0.0f;
+		y = (float)SkinProcessor.instance.cleanedSkinValue;
+
+		rb.transform.position = new Vector2 (0f, y);
+		CheckBounds (lowerBoundScreen, upperBoundScreen);
+	}
+
+	struct Vector2double{
+		public double x;
+		public double y;
+
+		public Vector2double(double n_x, double n_y){
+			x = n_x;
+			y = n_y;
+		}
+	}
+
+
+
+
+
+
+
+
+
+
+
+	public void SetupSkinZones(){
+		baselineAvg = SkinProcessor.instance.GetBaselineAvg();
+		standardDev = SkinProcessor.instance.GetStandardDev();
+		double max = SkinProcessor.instance.GetMax ();
+		double min = SkinProcessor.instance.GetMin ();
+		Debug.Log ("average: " + baselineAvg + "\n" + "standardDev: " + standardDev + "\n" + "max: " + max + "\n" + "min: " + min);
+
+		double zoneHeight;
+		if (standardDeviationAsZone) {
+			zoneHeight = standardDev;
+		} else {
+			zoneHeight = (max - min) / SkinValueZones.Length;
+		}
+
+		SkinValueZones [0] = new Vector2double (baselineAvg + (3 * zoneHeight),	baselineAvg + (2 * zoneHeight))	;
+		SkinValueZones [1] = new Vector2double (baselineAvg + (2 * zoneHeight),	baselineAvg + (1 * zoneHeight));
+		SkinValueZones [2] = new Vector2double (baselineAvg + (1 * zoneHeight),	baselineAvg + (0 * zoneHeight));
+		SkinValueZones [3] = new Vector2double (baselineAvg - (0 * zoneHeight),	baselineAvg - (1 * zoneHeight));
+		SkinValueZones [4] = new Vector2double (baselineAvg - (1 * zoneHeight),	baselineAvg - (2 * zoneHeight));
+		SkinValueZones [5] = new Vector2double (baselineAvg - (2 * zoneHeight),	baselineAvg - (3 * zoneHeight));
+	}
+
 	private Vector2 ZoneOfSkinValue (double currentSkinValue){
 		Vector2 zoneOfSkinValue = new Vector2(-1 , -1);
 		bool inZones = true;
@@ -144,122 +246,9 @@ public class PlayerController : MonoBehaviour {
 				y += 1;
 				temp += standardDevPer;
 			}
-		
 			zoneOfSkinValue.y = y;
 		}
 
-		Debug.Log("currentZone: " + zoneOfSkinValue.x +"\n"
-				+ "currentSkinValue: " + currentSkinValue + "\n"
-			+ "max: " + SkinValueZones[0].x +"\n"
-			+ "min: " + SkinValueZones[5].y +"\n" 
-			+ "bottom: " + SkinValueZones[currentZone].y + "\n" +"temp: " + SkinValueZones [currentZone].y + "\n"
-				+ "top: " + SkinValueZones[currentZone].x + "\n"
-				+ "zoneHeight: " + zoneHeight + "\n"
-				+ "standardDevPer: " + standardDevPer + "\n"
-				+ "y: " + zoneOfSkinValue.y);
-
 		return zoneOfSkinValue;
-	}
-
-	private Vector2 ZoneOfPlayer(){
-		Vector2 zoneOfPlayer = new Vector2(0, 0);
-		float playerPos = this.transform.position.y;
-
-		for (int i = 0; i < flowerZonePositions.Length; i++) {
-			if (isValueInRange (playerPos, flowerZonePositions [i])) {
-				zoneOfPlayer.x = i;
-				break;
-			}
-		}		
-		int currentZone = (int) zoneOfPlayer.x;
-		float flowerZonePer = (flowerZonePositions [currentZone].x - flowerZonePositions [currentZone].y)/divider;
-		zoneOfPlayer.y = Mathf.Floor( (playerPos - flowerZonePositions [currentZone].y) / flowerZonePer);
-		return zoneOfPlayer;
-	}
-
-	private bool isValueInRange (float value, Vector2 range){
-		return (value < range.x && value > range.y);
-	}
-
-	private bool isValueInRange (double value, Vector2double range){
-		return (value < range.x && value > range.y);
-	}
-
-	public void SetupSkinZones(){
-		baselineAvg = SkinProcessor.instance.GetBaselineAvg();
-		standardDev = SkinProcessor.instance.GetStandardDev();
-		double max = SkinProcessor.instance.GetMax ();
-		double min = SkinProcessor.instance.GetMin ();
-		Debug.Log ("average: " + baselineAvg + "\n" + "standardDev: " + standardDev + "\n" + "max: " + max + "\n" + "min: " + min);
-
-		double zoneHeight;
-		if (standardDeviationAsZone) {
-			zoneHeight = standardDev;
-		} else {
-			zoneHeight = (max - min) / SkinValueZones.Length;
-		}
-			
-		SkinValueZones [0] = new Vector2double (baselineAvg + (3 * zoneHeight),	baselineAvg + (2 * zoneHeight))	;
-		SkinValueZones [1] = new Vector2double (baselineAvg + (2 * zoneHeight),	baselineAvg + (1 * zoneHeight));
-		SkinValueZones [2] = new Vector2double (baselineAvg + (1 * zoneHeight),	baselineAvg + (0 * zoneHeight));
-		SkinValueZones [3] = new Vector2double (baselineAvg - (0 * zoneHeight),	baselineAvg - (1 * zoneHeight));
-		SkinValueZones [4] = new Vector2double (baselineAvg - (1 * zoneHeight),	baselineAvg - (2 * zoneHeight));
-		SkinValueZones [5] = new Vector2double (baselineAvg - (2 * zoneHeight),	baselineAvg - (3 * zoneHeight));
-		ShowZones ();
-	}
-
-	//Add points if bee hits a flower
-	private void OnTriggerEnter2D (Collider2D col){
-		if (col.gameObject.tag == "Flower") {
-			float yPos = col.gameObject.transform.position.y;
-			int zone = flowerCreator.ReturnFlowerZone (yPos);
-			int points = (int) Mathf.Pow(2, (zone));
-
-			GameController.instance.ScoreChange (points);
-			col.gameObject.GetComponentInChildren<ParticleSystem> ().Play ();
-		}
-	}
-
-	private void CheckBounds(float lowerBound, float upperBound){
-		float y = rb.transform.position.y;
-		if (y > upperBound) {
-			y = upperBound;
-		} else if (y < lowerBound) {
-			y = lowerBound;
-		}
-		rb.transform.position = new Vector2 (0f, y);
-	}
-
-	//Set the Bee-position to the transformed SkinValue
-	//This is not done right now
-	private void BitalinoSetting(){
-		float y = 0.0f;
-		y = (float)SkinProcessor.instance.currentSkinValue;
-
-		rb.transform.position = new Vector2 (0f, y);
-		CheckBounds (lowerBoundScreen, upperBoundScreen);
-	}
-
-	struct Vector2double{
-		public double x;
-		public double y;
-
-		public Vector2double(double n_x, double n_y){
-			x = n_x;
-			y = n_y;
-		}
-	}
-
-	private void ShowZones(){
-		float zoneHeight = (float) standardDev;
-		for (int i = 0; i < SkinValueZones.Length; i++) {
-			zoneSprites [0].transform.localScale.Set(1f, zoneHeight, 1f);
-		}
-		zoneSprites [0].transform.SetPositionAndRotation (new Vector3 (6.5f, (float) (baselineAvg + 2.5 * zoneHeight), 0f), Quaternion.identity);
-		zoneSprites [1].transform.SetPositionAndRotation (new Vector3 (6.5f, (float) (baselineAvg + 1.5 * zoneHeight), 0f), Quaternion.identity);
-		zoneSprites [2].transform.SetPositionAndRotation (new Vector3 (6.5f, (float) (baselineAvg + 0.5 * zoneHeight), 0f), Quaternion.identity);
-		zoneSprites [3].transform.SetPositionAndRotation (new Vector3 (6.5f, (float) (baselineAvg + 0.5 * zoneHeight), 0f), Quaternion.identity);
-		zoneSprites [4].transform.SetPositionAndRotation (new Vector3 (6.5f, (float) (baselineAvg + 1.5 * zoneHeight), 0f), Quaternion.identity);
-		zoneSprites [5].transform.SetPositionAndRotation (new Vector3 (6.5f, (float) (baselineAvg + 2.5 * zoneHeight), 0f), Quaternion.identity);
 	}
 }

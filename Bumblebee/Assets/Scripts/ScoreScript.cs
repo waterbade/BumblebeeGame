@@ -14,7 +14,9 @@ public class ScoreScript : MonoBehaviour {
 		if (EventManager.instance.end) {
 			EventManager.instance.end = false;
 			SetScore ();
-			restartButton.onClick.AddListener (EventManager.instance.SwitchToStart);
+
+			if (TrialManager.instance.currentStrategy.Count > 0)
+				restartButton.onClick.AddListener (EventManager.instance.SwitchToStart);
 		}
 	}
 	// Use this for initialization
@@ -22,6 +24,8 @@ public class ScoreScript : MonoBehaviour {
 		BaselineAvg.text = EventManager.instance.baselineAverage.ToString();
 		FeedbackAvg.text = EventManager.instance.feedbackAverage.ToString ();
 		score.text = EventManager.instance.score.ToString ();
+
+		TrialManager.instance.SaveScores (BaselineAvg.text, FeedbackAvg.text, score.text);
 	}
 		
 }

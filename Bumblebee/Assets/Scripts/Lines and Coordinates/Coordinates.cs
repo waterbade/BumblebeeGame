@@ -23,10 +23,10 @@ public class Coordinates : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-		Vector3 start_point = new Vector3 (start_x, start_y);
+		/*Vector3 start_point = new Vector3 (start_x, start_y);
 		Vector3 end_point = new Vector3 (end_x, end_y);
 		line.SetPosition (0, start_point);
-		line.SetPosition (1, end_point);
+		line.SetPosition (1, end_point);*/
 		
 	}
 }

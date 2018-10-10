@@ -10,22 +10,23 @@ public class EventManager : MonoBehaviour {
 	public static EventManager instance;
 	private static EventManager eventManager;
 
-	private bool toGame;
+	private bool toGame = false;
+	private bool toGraphs = false;
 	private float anticipationDuration;
 	private float setupStart;
-	public bool setup = false;
-	public bool playVideo = false;
+	[HideInInspector] public bool setup = false;
+	[HideInInspector] public bool playVideo = false;
 
 	public float biofeedbackDuration = 30f;
 	private float biofeedbackStart;
-	public bool biofeedback = false;
+	[HideInInspector] public bool biofeedback = false;
 
 	private int currentTrial = 0;
 
-	public bool end = false;
-	public float baselineAverage = 0.0f;
-	public float feedbackAverage = 0.0f;
-	public int score = 0;
+	[HideInInspector] public bool end = false;
+	[HideInInspector] public float baselineAverage = 0.0f;
+	[HideInInspector] public float feedbackAverage = 0.0f;
+	[HideInInspector] public int score = 0;
 
 	void Awake()
 	{
@@ -52,6 +53,7 @@ public class EventManager : MonoBehaviour {
 		}
 
 		if (biofeedback) {
+			SkinProcessor.instance.SetupSkinZones ();
 			float now = Time.time;
 			Debug.ClearDeveloperConsole ();
 			//Debug.Log ("Console cleared");
@@ -66,18 +68,26 @@ public class EventManager : MonoBehaviour {
 
 	public void SwitchToSetupForGame(){
 		toGame = true;
+		toGraphs = false;
 		setup = true;
 		SceneManager.LoadScene ("setup");
 		setupStart = Time.time;
-
 	}
 
 	public void SwitchToSetupForGraphs(){
 		toGame = false;
+		toGraphs = true;
 		setup = true;
 		SceneManager.LoadScene ("setup");
 		setupStart = Time.time;
-
+	}
+		
+	public void SwitchToSetupForControl(){
+		toGame = false;
+		toGraphs = false;
+		setup = true;
+		SceneManager.LoadScene ("setup");
+		setupStart = Time.time;
 	}
 
 	void SetAnticipationDuration (){
@@ -90,9 +100,11 @@ public class EventManager : MonoBehaviour {
 
 	public void StartBiofeedback(){
 		if (toGame) {
-			SwitchToGame();
+			SwitchToGame ();
+		} else if (toGraphs) {
+			SwitchToGraphs ();
 		} else {
-			SwitchToGraphs();
+			SwitchToControl ();
 		}
 		biofeedback = true;
 		biofeedbackStart = Time.time;
@@ -104,6 +116,10 @@ public class EventManager : MonoBehaviour {
 
 	private void SwitchToGraphs(){
 		SceneManager.LoadScene ("graphs");
+	}
+
+	private void SwitchToControl(){
+		SceneManager.LoadScene ("control");
 	}
 
 	public void SwitchToStart(){

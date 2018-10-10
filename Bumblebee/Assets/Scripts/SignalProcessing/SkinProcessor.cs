@@ -9,7 +9,7 @@ public class SkinProcessor : SignalProcessor {
 	private static SkinProcessor skinProcessor;
 
 	public float diff = 0.1f;
-	public double currentSkinValue;
+	public double cleanedSkinValue;
 	public string skinValues = "";
 
 	public string _event = "start";
@@ -22,7 +22,10 @@ public class SkinProcessor : SignalProcessor {
 	private double noOfFeedbackValues = 0f;
 	private double max;
 	private double min;
-	private double cameraSize;
+
+	private Vector2double[] zoneArray = new Vector2double[6];
+	private bool zonesSet = false;
+	private Vector2 currentZone;
 
 	void Awake()
 	{
@@ -41,34 +44,74 @@ public class SkinProcessor : SignalProcessor {
 		smoothedBuffer = new double[bufferSize];
 		squaredBuffer = new double[bufferSize];
 		thresholdedBuffer = new double[bufferSize];
-		cameraSize = Camera.main.orthographicSize;
 		max = -100;
 		min = 100;
+		currentZone = new Vector2 (0, 10);
+
 	}
-	
+
+	public double GetBaselineAvg(){
+		return baselineAvg;
+	}
+
+	public double GetStandardDev(){
+		return standardDeviation;
+	}
+
+	public double GetMax(){
+		return max;
+	}
+
+	public double GetMin(){
+		return min;
+	}
+
+	public Vector2 GetSkinValueZone(){
+		return currentZone;
+	}
+
 	public override void ProcessSignals (double value, int i)
 	{
 		valueBuffer [i] = value;		//0
+
+		//Cleanup the signal by filtering out jumps of more than 0.1 in value (and replacng them with the previous value
 		if (i > 0) {
 			smoothedBuffer [i] = CleanupSignal ((float)valueBuffer [i], (float)smoothedBuffer [i - 1]); //1
 		} else {
 			smoothedBuffer [i] = (double)Mathf.Min (Mathf.Max ((float)value, 0f), 10f);
 		}
-		
-		squaredBuffer [i] = Smooth(smoothedBuffer[i]); //2
 
+		//Smooth the cleaned signal
+		//squaredBuffer [i] = Smooth(smoothedBuffer[i]); //2
+
+		//do calculations at the right time
 		if (EventManager.instance.setup) {
-			baselineValues.Add (squaredBuffer [i]);
+			//baselineValues.Add (squaredBuffer [i]);
+			baselineValues.Add (smoothedBuffer [i]);
 			_event = "setup";
 		} else if (EventManager.instance.biofeedback) {
-			CalculateFeedbackAverage (squaredBuffer [i]); 
+			//CalculateFeedbackAverage (squaredBuffer [i]); 
+			CalculateFeedbackAverage (smoothedBuffer [i]); 
 			_event = "feedback";}
-		
-		currentSkinValue = squaredBuffer [i];
-		thresholdedBuffer [i] = squaredBuffer[i]; //ScaleEDA (squaredBuffer[i]);//3
-		skinValues = ";"+value.ToString () + ";" + smoothedBuffer [i].ToString () + ";" + squaredBuffer [i].ToString () + ";" + thresholdedBuffer [i].ToString ();
-		skinValues = skinValues.Replace (".", ",");
-		SkinValuesString ();
+
+		//save the cleaned value for other scripts to use
+		//cleanedSkinValue = squaredBuffer [i];
+		cleanedSkinValue = smoothedBuffer [i];
+
+		//scale by using zones
+		if (zonesSet) {
+			currentZone = ZoneOfSkinValue (cleanedSkinValue);
+			thresholdedBuffer [i] = ZoneToScreenPosition(currentZone); //3
+			//Debug.Log("zone: "+currentZone + "screenPosition: " + thresholdedBuffer[i]);
+			squaredBuffer[i] = Smooth(thresholdedBuffer[i]);
+
+		} else{
+			//thresholdedBuffer [i] = squaredBuffer [i];
+			thresholdedBuffer [i] = smoothedBuffer [i];
+		}
+
+		//log it all for later evaluation
+		LogSkinValuesToExcel (value, i);
 	}
 		
 	private double CleanupSignal(float value, float previousValue){
@@ -114,15 +157,10 @@ public class SkinProcessor : SignalProcessor {
 			double val = d - baselineAvg;
 			double valSquared = val * val;
 			sum += valSquared;
-			//sum += Mathf.Pow ((val), 2);
 		}
 		float variance = (float) (sum / baselineValues.Count);
 		standardDeviation = Mathf.Sqrt (variance);
 		Debug.Log ("avg: " + baselineAvg + "\n standard dev: " + standardDeviation);
-	}
-
-	private double ScaleEDA (double oldValue){
-		return oldValue;
 	}
 
 	public void Restart(){
@@ -133,8 +171,11 @@ public class SkinProcessor : SignalProcessor {
 		noOfFeedbackValues = 0f;
 	}
 
-	//print values each time the event (start, setup, feedback) changes
-	private void SkinValuesString(){
+
+	private void LogSkinValuesToExcel(double originalValue, int i){
+		skinValues = ";"+originalValue.ToString () + ";" + smoothedBuffer[i].ToString ();
+		skinValues = skinValues.Replace (".", ",");
+	
 		//check if the event has changed
 		if (!Equals(prevEvent, _event)){
 			skinValues += ";" + _event +";";
@@ -154,19 +195,130 @@ public class SkinProcessor : SignalProcessor {
 		skinValues += printedAvg;			
 	}
 
-	public double GetBaselineAvg(){
-		return baselineAvg;
+	public void SetupSkinZones(){
+		if (!zonesSet) {
+			double zoneHeight = standardDeviation;
+
+			zoneArray [0] = new Vector2double (baselineAvg + (3 * zoneHeight),	baselineAvg + (2 * zoneHeight));
+			zoneArray [1] = new Vector2double (baselineAvg + (2 * zoneHeight),	baselineAvg + (1 * zoneHeight));
+			zoneArray [2] = new Vector2double (baselineAvg + (1 * zoneHeight),	baselineAvg + (0 * zoneHeight));
+			zoneArray [3] = new Vector2double (baselineAvg - (0 * zoneHeight),	baselineAvg - (1 * zoneHeight));
+			zoneArray [4] = new Vector2double (baselineAvg - (1 * zoneHeight),	baselineAvg - (2 * zoneHeight));
+			zoneArray [5] = new Vector2double (baselineAvg - (2 * zoneHeight),	baselineAvg - (3 * zoneHeight));
+
+			zonesSet = true;
+		}
 	}
 
-	public double GetStandardDev(){
-		return standardDeviation;
+	private bool isValueInRange (double value, Vector2double range){
+		return (value < range.x && value > range.y);
 	}
 
-	public double GetMax(){
-		return max;
+	private Vector2 ZoneOfSkinValue (double value){
+		Vector2 zone = new Vector2 (-1, -1);
+		int divider = 10;
+
+		//iterate through all zones and check if the value is in a zone
+		for (int i = 0; i < zoneArray.Length; i++) {
+			if (isValueInRange (value, zoneArray [i])) {
+				zone.x = i;
+				break;
+			}
+		}
+
+		//if the current skinValue is not in a zone,
+		if (zone.x == -1) {
+			//if it is higher than baselineAvg + 3 standardDev = set zone to 0 and subzone to 10 (highest possible value)
+			if (value > zoneArray [0].x) {
+				zone.x = 0;
+				zone.y = 0;
+
+			// if current Value is lower than baselineAvg - 3 standardDev = set zone to 5
+			} else {
+				zone.x = zoneArray.Length - 1;
+				//and subzone to 0 (lowest possible value)
+				zone.y = 0;
+			}
+		}
+		//otherwise if it is in a zone, calculate the subZone
+		else {
+			int currentZone = (int)zone.x;
+			double zoneHeight = zoneArray [currentZone].x - zoneArray [currentZone].y;
+			double standardDevPer = zoneHeight / divider;
+
+			double temp = zoneArray [currentZone].y;
+			int y = -1;
+
+			while (value > temp) {
+				y += 1;
+				temp += standardDevPer;
+			}
+			zone.y = y;
+		}
+
+		return zone;
 	}
 
-	public double GetMin(){
-		return min;
+	private double ZoneToScreenPosition(Vector2 zone){
+		int screenHeight = 12;
+		double zoneHeight = screenHeight / zoneArray.Length;
+		double subZoneHeight = zoneHeight / 10;
+
+		double screenPosition;
+
+		int myZone = (int)zone.x;
+		switch (myZone) {
+		case 0:
+			screenPosition = (2 * zoneHeight) + ((int)zone.y * subZoneHeight);
+			break;
+		case 1:
+			screenPosition = (1 * zoneHeight) + ((int)zone.y * subZoneHeight);
+			break;
+		case 2:
+			screenPosition = (0 * zoneHeight) + ((int)zone.y * subZoneHeight);
+			break;
+		case 3:
+			screenPosition = (-1 * zoneHeight) + ((int)zone.y * subZoneHeight);
+			break;
+		case 4:
+			screenPosition = (-2 * zoneHeight) + ((int)zone.y * subZoneHeight);
+			break;
+		case 5:
+			screenPosition = (-3 * zoneHeight) + ((int)zone.y * subZoneHeight);
+			break;
+		default:
+			screenPosition = screenHeight - subZoneHeight;
+			Debug.Log ("skinValue out of zone");
+			break;
+		}
+
+		return screenPosition;
+	}
+
+
+
+	private void LogZones(Vector2 zone){
+		int _zone = (int) zone.x;
+		Debug.Log (
+		  "Zone: " + _zone + "\n"
+		+ "subZone: " + zone.y + "\n"
+		+ "currentSkinValue: " + cleanedSkinValue + "\n"
+		+ "max: " + zoneArray [0].x + "\n"
+		+ "min: " + zoneArray [5].y + "\n"
+		+ "bottom: " + zoneArray [_zone].y + "\n" + "temp: " + zoneArray [_zone].y + "\n"
+		+ "top: " + zoneArray [_zone].x
+		);
+
+	}
+
+
+	struct Vector2double{
+		public double x;
+		public double y;
+
+		public Vector2double(double n_x, double n_y){
+			x = n_x;
+			y = n_y;
+		}
 	}
 }
