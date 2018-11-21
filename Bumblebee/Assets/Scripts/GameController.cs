@@ -9,7 +9,7 @@ public class GameController : MonoBehaviour
 	public Text scoreText;						//A reference to the UI text component that displays the player's score.
 	public Image honey; 
 	private float score = 0f;                      //The player's score.
-	private float maxScore = 40f;
+	private float maxScore = 100f;
 	public float scrollSpeed = -1.5f;
 
 

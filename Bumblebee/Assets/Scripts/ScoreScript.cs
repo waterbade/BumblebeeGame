@@ -26,6 +26,7 @@ public class ScoreScript : MonoBehaviour {
 		score.text = EventManager.instance.score.ToString ();
 
 		TrialManager.instance.SaveScores (BaselineAvg.text, FeedbackAvg.text, score.text);
+		AudioManager.instance.ResetSounds ();
 	}
 		
 }

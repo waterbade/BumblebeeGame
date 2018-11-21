@@ -18,12 +18,15 @@ public class VideoPlayerScript : MonoBehaviour {
 		if (EventManager.instance.playVideo)
 		{		
 			EventManager.instance.playVideo = false;
+			AudioManager.instance.playVideoSounds ();
+			vidPlayer.playbackSpeed = 1f;
 			vidPlayer.Play ();
 		}
 	}
 
 	public void VideoHasPlayed(UnityEngine.Video.VideoPlayer vp){
 		EventManager.instance.StartBiofeedback ();
+		//AudioManager.instance.ResumeMusic ();
 	}
 
 	private int SelectVideoClip(int trialNo){
@@ -56,11 +59,12 @@ public class VideoPlayerScript : MonoBehaviour {
 
 		//select a random entry in the possble videos List
 		int listEntryToPlay = Random.Range(0, possibleVideos.Count);
-		Debug.Log ("listEntryToPlay is: " + listEntryToPlay);
+		//Debug.Log ("listEntryToPlay is: " + listEntryToPlay);
 		int videoToPlay = possibleVideos [listEntryToPlay];
 
 		TrialManager.instance.SetVideosPlayed (videoToPlay);
-		Debug.Log ("video selected = no. " + videoToPlay);
+		//Debug.Log ("video selected = no. " + videoToPlay);
 		return videoToPlay;
 	}
+
 }

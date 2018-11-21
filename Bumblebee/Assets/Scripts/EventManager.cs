@@ -17,7 +17,7 @@ public class EventManager : MonoBehaviour {
 	[HideInInspector] public bool setup = false;
 	[HideInInspector] public bool playVideo = false;
 
-	public float biofeedbackDuration = 30f;
+	public float biofeedbackDuration = 120f;
 	private float biofeedbackStart;
 	[HideInInspector] public bool biofeedback = false;
 
@@ -67,6 +67,7 @@ public class EventManager : MonoBehaviour {
 	}
 
 	public void SwitchToSetupForGame(){
+		AudioManager.instance.StopMusic ();
 		toGame = true;
 		toGraphs = false;
 		setup = true;
@@ -75,6 +76,7 @@ public class EventManager : MonoBehaviour {
 	}
 
 	public void SwitchToSetupForGraphs(){
+		AudioManager.instance.StopMusic ();
 		toGame = false;
 		toGraphs = true;
 		setup = true;
@@ -83,6 +85,7 @@ public class EventManager : MonoBehaviour {
 	}
 		
 	public void SwitchToSetupForControl(){
+		AudioManager.instance.StopMusic ();
 		toGame = false;
 		toGraphs = false;
 		setup = true;

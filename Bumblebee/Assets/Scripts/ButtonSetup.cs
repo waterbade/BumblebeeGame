@@ -8,6 +8,7 @@ public class ButtonSetup : MonoBehaviour {
 	public Button beeButton;
 	public Button graphButton;
 
+	public AudioClip[] scarysounds;
 	// Use this for initialization
 	void Start () {
 		SetupButtons ();

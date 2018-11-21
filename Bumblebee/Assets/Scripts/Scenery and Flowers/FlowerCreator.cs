@@ -18,9 +18,9 @@ public class FlowerCreator : MonoBehaviour {
 	private float cameraSize;
 	private float gameDuration;
 
-	public int flowerNoZone1 = 25;
-	public int flowerNoZone2 = 25;
-	public int flowerNoZone3 = 25;
+	public int flowerNoZone1 = 85;
+	public int flowerNoZone2 = 85;
+	public int flowerNoZone3 = 85;
 
 	public float zone1Offset = 0.1f;
 	public float zone2Offset = 0.1f;

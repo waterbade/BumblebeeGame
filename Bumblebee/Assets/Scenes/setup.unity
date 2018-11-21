@@ -343,15 +343,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   vidPlayer: {fileID: 869742205}
   scaryVideos:
-  - {fileID: 32900000, guid: b481850af4842c540981d5476c6556b2, type: 3}
-  - {fileID: 32900000, guid: ae3474714bfae444c9fd52da15ea091c, type: 3}
-  - {fileID: 32900000, guid: f038fe12688d53a42a16c67948026085, type: 3}
-  - {fileID: 32900000, guid: e9b896e90d84a934ebb24641d8c0e032, type: 3}
-  - {fileID: 32900000, guid: 6479d35d38c3cd74a9c117ea2d948622, type: 3}
-  - {fileID: 32900000, guid: 815f80d04081837449672ee9cf15cfdd, type: 3}
-  - {fileID: 32900000, guid: b9d71ff4836bc06419e13696de9e5e5f, type: 3}
-  - {fileID: 32900000, guid: 71a85cbe8283a3d4c89d4047ef47b838, type: 3}
-  - {fileID: 32900000, guid: d528f4869cfa10b44a888b6e1f32eae5, type: 3}
+  - {fileID: 32900000, guid: e490faa4c0f7a5846a00650c82a640eb, type: 3}
+  - {fileID: 32900000, guid: 54490d5ae9a47134889091575a1977bf, type: 3}
+  - {fileID: 32900000, guid: 34e1a1ac86621164ab83d22a4b2daf20, type: 3}
+  - {fileID: 32900000, guid: 8547ffa51d4cbd5429e3caae29f102b4, type: 3}
+  - {fileID: 32900000, guid: 9b6cef3af6adac84aae9ce140517442a, type: 3}
+  - {fileID: 32900000, guid: 7a18d83818dba2f42881e74716f1f234, type: 3}
+  - {fileID: 32900000, guid: cbd454b3158d0234b813444f48fa123a, type: 3}
+  - {fileID: 32900000, guid: 98793887fa854264dacaa8b4b62d4e67, type: 3}
+  - {fileID: 32900000, guid: 62ce10b8557d9254781cbb24148721b3, type: 3}
 --- !u!1 &959866294
 GameObject:
   m_ObjectHideFlags: 0
